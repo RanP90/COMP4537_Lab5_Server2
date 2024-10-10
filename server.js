@@ -4,124 +4,84 @@
  */
 
 require('dotenv').config({ path: './.env' });
-const http = require('http');
-const url = require('url');
-const path = require('path');
+const express = require('express');
+const cors = require('cors');
 const { queryAsync } = require('./db');
-const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound } = require('./lang/en/en'); // Removed unused insertSuccess and insertJSONError
+const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound, insertSuccess, insertJSONError } = require('./lang/en/en');
 const ALLOWED_ORIGIN = 'https://comp4537lab5server1.netlify.app';
 
-// Helper function to start the server
-const startServer = (port, requestHandler) => {
-    const server = http.createServer(requestHandler);
-    server.listen(port, () => {
-        console.log(`Server listening at http://localhost:${port}`);
-    });
-};
+const app = express();
+const port = 8008;
 
-// Function to handle inserting data
-const handleInsert = (req, res) => {
-    let data = '';
-  
-    req.on('data', (chunk) => {
-      data += chunk;
-    });
-  
-    req.on('end', async () => {
-      try {
-        const jsonData = JSON.parse(data); 
-        const patients = jsonData.data;
-  
-        // Insert query logic here
+// CORS middleware
+app.use(cors({
+    origin: ALLOWED_ORIGIN,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true
+}));
+
+// Middleware to parse JSON body
+app.use(express.json());
+
+// Route to handle inserting data
+app.post('/insert', async (req, res) => {
+    try {
+        const patients = req.body.data;
+
+        // Validate if data is present
+        if (!patients || !Array.isArray(patients)) {
+            return res.status(400).json({ error: insertJSONError });
+        }
+
         const insertQuery = 'INSERT INTO patient (name, dateOfBirth) VALUES ?';
         const insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
-  
+
         await queryAsync(insertQuery, [insertionData]);
-  
-        // Send back a JSON response
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: "Insert successful" }));
-      } catch (error) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: "Invalid data" }));
-      }
-    });
-};
 
-// Function to handle general SQL queries (POST)
-const handlePostQuery = (req, res) => {
-    let body = '';
-
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-
-    req.on('end', () => {
-        try {
-            const data = JSON.parse(body);
-            const query = data.query.trim().toUpperCase();
-
-            if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false, error: InvalidQueryType }));
-                return;
-            }
-
-            queryAsync(query).then(result => {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, data: result }));
-            }).catch(err => {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false, error: InvalidQuery }));
-            });
-        } catch (error) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: InvalidBody }));
-        }
-    });
-};
-
-// Handle SQL query from GET request
-const handleQuery = (req, res, queryParam) => {
-    queryAsync(queryParam).then(rows => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, data: rows }));
-    }).catch(err => {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: ServerError }));
-    });
-};
-
-// Main request handler for the server
-const requestHandler = (req, res) => {
-    const parsedUrl = url.parse(req.url, true);
-    const path = parsedUrl.pathname;
-
-    // CORS Headers
-    res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN); 
-    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    if (req.method === 'OPTIONS') {
-        res.writeHead(204);
-        res.end();
-        return;
+        res.status(200).json({ message: insertSuccess });
+    } catch (error) {
+        res.status(400).json({ error: InvalidBody });
     }
+});
 
-    if (path === '/insert' && req.method === 'POST') {
-        handleInsert(req, res);
-    } else if (path === '/query') {
-        if (req.method === 'GET') {
-            handleQuery(req, res, parsedUrl.query.query);
-        } else if (req.method === 'POST') {
-            handlePostQuery(req, res);
+// Route to handle general SQL queries (POST)
+app.post('/query', async (req, res) => {
+    try {
+        const query = req.body.query ? req.body.query.trim().toUpperCase() : null;
+
+        if (!query) {
+            return res.status(400).json({ success: false, error: InvalidBody });
         }
-    } else {
-        res.writeHead(404);
-        res.end(notFound);
-    }
-};
 
-// Start the server on port 8008
-startServer(8008, requestHandler);
+        if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
+            return res.status(400).json({ success: false, error: InvalidQueryType });
+        }
+
+        const result = await queryAsync(query);
+        res.status(200).json({ success: true, data: result });
+    } catch (err) {
+        res.status(500).json({ success: false, error: InvalidQuery });
+    }
+});
+
+// Route to handle SQL query from GET request
+app.get('/query', async (req, res) => {
+    try {
+        const queryParam = req.query.query;
+        const rows = await queryAsync(queryParam);
+        res.status(200).json({ success: true, data: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: ServerError });
+    }
+});
+
+// Handle 404
+app.use((req, res) => {
+    res.status(404).send(notFound);
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+});
