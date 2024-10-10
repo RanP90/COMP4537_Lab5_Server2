@@ -4,11 +4,11 @@
  */
 
 require('dotenv').config({ path: './.env' });
-const http = require('http');
+const https = require('https');
 const url = require('url');
 const path = require('path');
 const { queryAsync } = require('./db');
-const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound } = require('./lang/en/en'); // Removed unused insertSuccess and insertJSONError
+const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound } = require('./lang/en/en'); 
 const ALLOWED_ORIGIN = 'https://comp4537lab5server1.netlify.app';
 
 // Helper function to start the server
@@ -98,7 +98,7 @@ const requestHandler = (req, res) => {
     const path = parsedUrl.pathname;
 
     // CORS Headers
-    res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN); // Corrected here
+    res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN); 
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
