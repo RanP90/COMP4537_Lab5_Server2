@@ -2,6 +2,7 @@
  * This project includes code suggestions and assistance from ChatGPT 
  * to enhance certain functionalities and optimize code structure.
  */
+
 const http = require('http');
 const url = require('url');
 const path = require('path');
@@ -19,6 +20,45 @@ const startServer = (port, requestHandler) => {
 };
 
 // Function to handle inserting data
+const handlePostQuery = (req, res) => {
+    let body = '';
+
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+
+    req.on('end', () => {
+        try {
+            const data = JSON.parse(body);
+            const query = data.query.trim().toUpperCase();
+
+            console.log("Received query:", query); // Log the query received from the client
+
+            if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: InvalidQueryType }));
+                return;
+            }
+
+            queryAsync(query).then(result => {
+                console.log("Query result:", result); // Log the result of the query
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, data: result }));
+            }).catch(err => {
+                console.error("Error executing query:", err); // Log any errors during execution
+
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: InvalidQuery }));
+            });
+        } catch (error) {
+            console.error("Invalid request body:", error); // Log if there is an error parsing the request body
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: InvalidBody }));
+        }
+    });
+};
+/*
 const handleInsert = (req, res) => {
     let data = '';
   
@@ -38,17 +78,11 @@ const handleInsert = (req, res) => {
         await queryAsync(insertQuery, [insertionData]);
   
         // Send back a JSON response
-        res.writeHead(200, {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-          });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: insertSuccess }));
       } catch (error) {
         console.error("Insert Error:", error);
-        res.writeHead(400, {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-          });
+        res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: insertJSONError }));
       }
     });
@@ -69,19 +103,13 @@ const handlePostQuery = (req, res) => {
 
             if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
                 console.error("Invalid query type");
-                res.writeHead(400, {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-                  });
+                res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: false, error: InvalidQueryType }));
                 return;
             }
 
             queryAsync(query).then(result => {
-                res.writeHead(200, {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-                  });
+                res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true, data: result }));
             }).catch(err => {
                 console.error(err);
@@ -90,22 +118,17 @@ const handlePostQuery = (req, res) => {
             });
         } catch (error) {
             console.error(error);
-            res.writeHead(400, {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-              });
+            res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: InvalidBody }));
         }
     });
 };
+*/
 
 // Handle SQL query from GET request
 const handleQuery = (req, res, queryParam) => {
     queryAsync(queryParam).then(rows => {
-        res.writeHead(200, {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-          });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, data: rows }));
     }).catch(err => {
         console.error(err);
@@ -140,10 +163,7 @@ const requestHandler = (req, res) => {
             handlePostQuery(req, res);
         }
     } else {
-        res.writeHead(404, {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-          });
+        res.writeHead(404);
         res.end(notFound);
     }
 };
