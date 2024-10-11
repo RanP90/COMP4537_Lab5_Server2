@@ -38,11 +38,17 @@ const handleInsert = (req, res) => {
         await queryAsync(insertQuery, [insertionData]);
   
         // Send back a JSON response
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+          });
         res.end(JSON.stringify({ message: insertSuccess }));
       } catch (error) {
         console.error("Insert Error:", error);
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.writeHead(400, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+          });
         res.end(JSON.stringify({ error: insertJSONError }));
       }
     });
@@ -63,13 +69,19 @@ const handlePostQuery = (req, res) => {
 
             if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
                 console.error("Invalid query type");
-                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.writeHead(400, {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+                  });
                 res.end(JSON.stringify({ success: false, error: InvalidQueryType }));
                 return;
             }
 
             queryAsync(query).then(result => {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.writeHead(200, {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+                  });
                 res.end(JSON.stringify({ success: true, data: result }));
             }).catch(err => {
                 console.error(err);
@@ -78,7 +90,10 @@ const handlePostQuery = (req, res) => {
             });
         } catch (error) {
             console.error(error);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.writeHead(400, {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+              });
             res.end(JSON.stringify({ success: false, error: InvalidBody }));
         }
     });
@@ -87,7 +102,10 @@ const handlePostQuery = (req, res) => {
 // Handle SQL query from GET request
 const handleQuery = (req, res, queryParam) => {
     queryAsync(queryParam).then(rows => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+          });
         res.end(JSON.stringify({ success: true, data: rows }));
     }).catch(err => {
         console.error(err);
@@ -122,7 +140,10 @@ const requestHandler = (req, res) => {
             handlePostQuery(req, res);
         }
     } else {
-        res.writeHead(404);
+        res.writeHead(404, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+          });
         res.end(notFound);
     }
 };
