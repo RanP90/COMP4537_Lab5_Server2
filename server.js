@@ -4,16 +4,16 @@
  */
 
 require('dotenv').config({ path: './.env' });
-const http = require('http');
-const url = require('url');
-const path = require('path');
-const { queryAsync } = require('./db');
-const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound } = require('./lang/en/en'); 
+import { createServer } from 'http';
+import { parse } from 'url';
+import path from 'path';
+import { queryAsync } from './db';
+import { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound } from './lang/en/en'; 
 const ALLOWED_ORIGIN = 'https://comp4537lab5server1.netlify.app';
 
 // Helper function to start the server
 const startServer = (port, requestHandler) => {
-    const server = http.createServer(requestHandler);
+    const server = createServer(requestHandler);
     server.listen(port, () => {
         console.log(`Server listening at http://localhost:${port}`);
     });
@@ -94,7 +94,7 @@ const handleQuery = (req, res, queryParam) => {
 
 // Main request handler for the server
 const requestHandler = (req, res) => {
-    const parsedUrl = url.parse(req.url, true);
+    const parsedUrl = parse(req.url, true);
     const path = parsedUrl.pathname;
 
     // CORS Headers
