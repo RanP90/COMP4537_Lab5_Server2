@@ -58,7 +58,7 @@ const handlePostQuery = (req, res) => {
         }
     });
 };
-/*
+
 const handleInsert = (req, res) => {
     let data = '';
   
@@ -87,7 +87,7 @@ const handleInsert = (req, res) => {
       }
     });
   };
-
+/*
 // Function to handle general SQL queries (POST)
 const handlePostQuery = (req, res) => {
     let body = '';
