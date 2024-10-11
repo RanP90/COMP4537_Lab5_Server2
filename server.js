@@ -2,8 +2,6 @@
  * This project includes code suggestions and assistance from ChatGPT 
  * to enhance certain functionalities and optimize code structure.
  */
-
-require('dotenv').config({ path: './.env' });
 const http = require('http');
 const url = require('url');
 const path = require('path');
@@ -41,11 +39,11 @@ const handleInsert = (req, res) => {
   
         // Send back a JSON response
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: "Insert successful" }));
+        res.end(JSON.stringify({ message: insertSuccess }));
       } catch (error) {
         console.error("Insert Error:", error);
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: "Invalid data" }));
+        res.end(JSON.stringify({ error: insertJSONError }));
       }
     });
   };
