@@ -19,46 +19,6 @@ const startServer = (port, requestHandler) => {
     });
 };
 
-// Function to handle inserting data
-const handlePostQuery = (req, res) => {
-    let body = '';
-
-    req.on('data', chunk => {
-        body += chunk.toString();
-    });
-
-    req.on('end', () => {
-        try {
-            const data = JSON.parse(body);
-            const query = data.query.trim().toUpperCase();
-
-            console.log("Received query:", query); // Log the query received from the client
-
-            if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false, error: InvalidQueryType }));
-                return;
-            }
-
-            queryAsync(query).then(result => {
-                console.log("Query result:", result); // Log the result of the query
-
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, data: result }));
-            }).catch(err => {
-                console.error("Error executing query:", err); // Log any errors during execution
-
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: false, error: InvalidQuery }));
-            });
-        } catch (error) {
-            console.error("Invalid request body:", error); // Log if there is an error parsing the request body
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: false, error: InvalidBody }));
-        }
-    });
-};
-
 const handleInsert = (req, res) => {
     let data = '';
   
@@ -87,7 +47,7 @@ const handleInsert = (req, res) => {
       }
     });
   };
-/*
+
 // Function to handle general SQL queries (POST)
 const handlePostQuery = (req, res) => {
     let body = '';
@@ -99,7 +59,7 @@ const handlePostQuery = (req, res) => {
     req.on('end', () => {
         try {
             const data = JSON.parse(body);
-            const query = data.query.trim().toUpperCase();
+            const query = data.query.trim();
 
             if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
                 console.error("Invalid query type");
@@ -123,7 +83,6 @@ const handlePostQuery = (req, res) => {
         }
     });
 };
-*/
 
 // Handle SQL query from GET request
 const handleQuery = (req, res, queryParam) => {
