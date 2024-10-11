@@ -44,7 +44,7 @@ const queryAsync = (sql, params) => {
 // Function to create the patient table if it doesn't exist
 const createPatientTable = () => {
     const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS patient (
+        CREATE TABLE IF NOT EXISTS PATIENT (
             patientID INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100),
             dateOfBirth DATE
