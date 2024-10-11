@@ -61,8 +61,6 @@ const handlePostQuery = (req, res) => {
             const data = JSON.parse(body);
             const query = data.query.trim().toUpperCase();
 
-            console.log(query);
-
             if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
                 console.error("Invalid query type");
                 res.writeHead(400, { 'Content-Type': 'application/json' });
