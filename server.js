@@ -32,7 +32,7 @@ const handleInsert = (req, res) => {
         const patients = jsonData.data;
   
         // Insert query logic here
-        const insertQuery = 'INSERT INTO patient (name, dateOfBirth) VALUES ?';
+        const insertQuery = 'INSERT INTO PATIENT (name, dateOfBirth) VALUES ?';
         const insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
   
         await queryAsync(insertQuery, [insertionData]);
