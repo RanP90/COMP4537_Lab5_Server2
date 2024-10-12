@@ -3,29 +3,44 @@
  * to enhance certain functionalities and optimize code structure.
  */
 
-require('dotenv').config();  
 const mysql = require('mysql2');
 const fs = require('fs');
 const path = require('path');
 
-// Configuration for the database connection
+// Configuration for the database connection with hardcoded values
 const config = {
-    user: process.env.NAME,
-    password: process.env.PASSWORD,
-    host: process.env.HOST,
-    port: process.env.PORT,
-    database: process.env.DATABASE,
+    user: 'root',  
+    password: '',  
+    host: '127.0.0.1',  
+    port: 3306,  
+    database: 'lab5',  
 };
 
 // Create a connection to MySQL
 const connection = mysql.createConnection(config);
 
+// Function to check if the database connection is successful
+const checkDbConnection = () => {
+    connection.ping((err) => {
+        if (err) {
+            console.error('Error: Unable to connect to the database:', err.message);
+        } else {
+            console.log('Connection to MySQL database is active.');
+        }
+    });
+};
+
+// Connect to the database and log status
 connection.connect((err) => {
-    if (err) throw err;
+    if (err) {
+        console.error('Error: Could not connect to MySQL database:', err.message);
+        return;
+    }
     console.log('Connected to MySQL database');
-    
     // Create the table if it doesn't exist
     createPatientTable();
+    // Check the database connection status
+    checkDbConnection();
 });
 
 // Function to execute SQL queries (with Promise for async/await)
@@ -57,6 +72,7 @@ const createPatientTable = () => {
     });
 };
 
+// Export the queryAsync function
 module.exports = {
     queryAsync
 };
