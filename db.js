@@ -7,8 +7,8 @@ const mysql = require('mysql2');
 
 // Initial configuration for MySQL server connection (without database)
 const serverConfig = {
-    user: 'root',
-    password: '',
+    user: 'ran',
+    password: '0000',
     host: '127.0.0.1',
     port: 3306
 };
