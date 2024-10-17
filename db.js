@@ -103,5 +103,6 @@ const initializeDatabase = async () => {
 initializeDatabase();
 
 module.exports = {
-    queryAsync
+    queryAsync,
+    createPatientTable  
 };

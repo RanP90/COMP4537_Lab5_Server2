@@ -6,7 +6,7 @@
 const http = require('http');
 const url = require('url');
 const path = require('path');
-const { queryAsync } = require('./db');
+const { queryAsync, createPatientTable } = require('./db')
 const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound, insertSuccess, insertJSONError } = require('./lang/en/en');
 
 //const ALLOWED_ORIGIN = 'https://comp4537lab5server1.netlify.app';
@@ -19,34 +19,95 @@ const startServer = (port, requestHandler) => {
     });
 };
 
+/*
+const handleInsert = (req, res) => {const handleInsert = (req, res) => {
+    let data = '';
+
+    req.on('data', (chunk) => {
+        data += chunk;
+    });
+
+    req.on('end', async () => {
+        try {
+            const jsonData = JSON.parse(data); 
+            const patients = jsonData.data;
+
+            // Insert query logic here
+            const insertQuery = 'INSERT INTO PATIENT (name, dateOfBirth) VALUES ?';
+            const insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
+
+            await queryAsync(insertQuery, [insertionData]);
+
+            // Send back a JSON response
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: insertSuccess }));
+        } catch (error) {
+            if (error.code === 'ER_NO_SUCH_TABLE') {
+                // Table doesn't exist, so create it and retry
+                try {
+                    await createPatientTable();
+                    // Retry the insert
+                    await queryAsync(insertQuery, [insertionData]);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ message: insertSuccess }));
+                } catch (retryError) {
+                    console.error("Insert Retry Error:", retryError);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: insertJSONError }));
+                }
+            } else {
+                console.error("Insert Error:", error);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: insertJSONError }));
+            }
+        }
+    });
+};
+*/
+
 const handleInsert = (req, res) => {
     let data = '';
-  
+
     req.on('data', (chunk) => {
-      data += chunk;
+        data += chunk;
     });
-  
+
     req.on('end', async () => {
-      try {
-        const jsonData = JSON.parse(data); 
-        const patients = jsonData.data;
-  
-        // Insert query logic here
-        const insertQuery = 'INSERT INTO PATIENT (name, dateOfBirth) VALUES ?';
-        const insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
-  
-        await queryAsync(insertQuery, [insertionData]);
-  
-        // Send back a JSON response
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: insertSuccess }));
-      } catch (error) {
-        console.error("Insert Error:", error);
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: insertJSONError }));
-      }
+        try {
+            const jsonData = JSON.parse(data); 
+            const patients = jsonData.data;
+
+            // Insert query logic here
+            const insertQuery = 'INSERT INTO PATIENT (name, dateOfBirth) VALUES ?';
+            const insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
+
+            await queryAsync(insertQuery, [insertionData]);
+
+            // Send back a JSON response
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: insertSuccess }));
+        } catch (error) {
+            if (error.code === 'ER_NO_SUCH_TABLE') {
+                // Table doesn't exist, so create it and retry
+                try {
+                    await createPatientTable();
+                    // Retry the insert
+                    await queryAsync(insertQuery, [insertionData]);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ message: insertSuccess }));
+                } catch (retryError) {
+                    console.error("Insert Retry Error:", retryError);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: insertJSONError }));
+                }
+            } else {
+                console.error("Insert Error:", error);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: insertJSONError }));
+            }
+        }
     });
-  };
+};
 
 // Function to handle general SQL queries (POST)
 const handlePostQuery = (req, res) => {
