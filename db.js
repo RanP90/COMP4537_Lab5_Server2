@@ -5,30 +5,45 @@
 
 const mysql = require('mysql2');
 
-// Configuration for the database connection
-const config = {
-    user: 'root',        
-    password: '',    
-    host: '127.0.0.1',            
-    port: 3306,                   
-    database: 'lab5'              
+// Initial configuration for the MySQL server connection (without specifying the database)
+const serverConfig = {
+    user: 'root',
+    password: '',
+    host: '127.0.0.1',
+    port: 3306
 };
 
-// Create a connection to MySQL
-const connection = mysql.createConnection(config);
+// Configuration with the database once it exists
+const dbConfig = {
+    ...serverConfig,
+    database: 'lab5'
+};
 
-connection.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL database');
-    
-    // Create the table if it doesn't exist
-    createPatientTable();
-});
+// Create a connection to the MySQL server
+const serverConnection = mysql.createConnection(serverConfig);
+
+// Create a connection for the database once it's verified to exist
+let dbConnection;
+
+// Function to check or create the lab5 database
+const createDatabaseIfNotExists = () => {
+    return new Promise((resolve, reject) => {
+        const createDatabaseQuery = `CREATE DATABASE IF NOT EXISTS lab5;`;
+        serverConnection.query(createDatabaseQuery, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                console.log('Database lab5 checked/created.');
+                resolve(result);
+            }
+        });
+    });
+};
 
 // Function to execute SQL queries (with Promise for async/await)
 const queryAsync = (sql, params) => {
     return new Promise((resolve, reject) => {
-        connection.query(sql, params, (err, result) => {
+        dbConnection.query(sql, params, (err, result) => {
             if (err) {
                 reject(err);
             } else {
@@ -48,12 +63,31 @@ const createPatientTable = () => {
         );
     `;
 
-    connection.query(createTableQuery, (err, result) => {
+    dbConnection.query(createTableQuery, (err, result) => {
         if (err) throw err;
         console.log('Patient table checked/created.');
     });
 };
 
-module.exports = {
-    queryAsync
+// Main function to handle the creation of the database and table
+const initializeDatabase = async () => {
+    try {
+        await createDatabaseIfNotExists();
+
+        // After the database is created, connect to it
+        dbConnection = mysql.createConnection(dbConfig);
+        dbConnection.connect((err) => {
+            if (err) throw err;
+            console.log('Connected to lab5 database');
+            
+            // Create the patient table
+            createPatientTable();
+        });
+
+    } catch (error) {
+        console.error("Error during database setup:", error);
+    }
 };
+
+// Start the initialization process
+initializeDatabase();
