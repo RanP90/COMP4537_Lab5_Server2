@@ -12,17 +12,11 @@ const { ServerError, InvalidBody, InvalidQuery, InvalidQueryType, notFound, inse
 //const ALLOWED_ORIGIN = 'https://comp4537lab5server1.netlify.app';
 
 // Helper function to start the server
-const startServer = async (port, requestHandler) => {
-    try {
-        // Wait for the database and table to be initialized before starting the server
-        await initializeDatabase();
-        const server = http.createServer(requestHandler);
-        server.listen(port, () => {
-            console.log(`Server listening at http://localhost:${port}`);
-        });
-    } catch (error) {
-        console.error("Failed to initialize database before starting server:", error.message);
-    }
+const startServer = (port, requestHandler) => {
+    const server = http.createServer(requestHandler);
+    server.listen(port, () => {
+        console.log(`Server listening at http://localhost:${port}`);
+    });
 };
 
 const handleInsert = (req, res) => {
