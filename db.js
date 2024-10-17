@@ -5,7 +5,7 @@
 
 const mysql = require('mysql2');
 
-// Initial configuration for the MySQL server connection (without specifying the database)
+// Initial configuration for MySQL server connection (without database)
 const serverConfig = {
     user: 'root',
     password: '',
@@ -14,27 +14,59 @@ const serverConfig = {
 };
 
 // Configuration with the database once it exists
-const dbConfig = {
-    ...serverConfig,
-    database: 'lab5'
-};
+let dbConnection;  // Define dbConnection globally
 
-// Create a connection to the MySQL server
-const serverConnection = mysql.createConnection(serverConfig);
-
-// Create a connection for the database once it's verified to exist
-let dbConnection;
-
-// Function to check or create the lab5 database
+// Function to create the lab5 database if it doesn't exist
 const createDatabaseIfNotExists = () => {
+    const serverConnection = mysql.createConnection(serverConfig);
     return new Promise((resolve, reject) => {
-        const createDatabaseQuery = `CREATE DATABASE IF NOT EXISTS lab5;`;
-        serverConnection.query(createDatabaseQuery, (err, result) => {
+        serverConnection.query('CREATE DATABASE IF NOT EXISTS lab5;', (err, result) => {
             if (err) {
                 reject(err);
             } else {
                 console.log('Database lab5 checked/created.');
-                resolve(result);
+                resolve();
+            }
+        });
+    });
+};
+
+// Function to initialize the connection to the lab5 database
+const connectToDatabase = () => {
+    return new Promise((resolve, reject) => {
+        dbConnection = mysql.createConnection({
+            ...serverConfig,
+            database: 'lab5'
+        });
+
+        dbConnection.connect((err) => {
+            if (err) {
+                reject(err);
+            } else {
+                console.log('Connected to lab5 database');
+                resolve();
+            }
+        });
+    });
+};
+
+// Function to create the PATIENT table if it doesn't exist
+const createPatientTable = () => {
+    return new Promise((resolve, reject) => {
+        const createTableQuery = `
+            CREATE TABLE IF NOT EXISTS PATIENT (
+                patientID INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100),
+                dateOfBirth DATE
+            );
+        `;
+
+        dbConnection.query(createTableQuery, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                console.log('Patient table checked/created.');
+                resolve();
             }
         });
     });
@@ -43,6 +75,9 @@ const createDatabaseIfNotExists = () => {
 // Function to execute SQL queries (with Promise for async/await)
 const queryAsync = (sql, params) => {
     return new Promise((resolve, reject) => {
+        if (!dbConnection) {
+            reject(new Error("Database connection not initialized"));
+        }
         dbConnection.query(sql, params, (err, result) => {
             if (err) {
                 reject(err);
@@ -53,43 +88,20 @@ const queryAsync = (sql, params) => {
     });
 };
 
-// Function to create the patient table if it doesn't exist
-const createPatientTable = () => {
-    const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS PATIENT (
-            patientID INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100),
-            dateOfBirth DATE
-        );
-    `;
-
-    dbConnection.query(createTableQuery, (err, result) => {
-        if (err) throw err;
-        console.log('Patient table checked/created.');
-    });
-};
-
-// Main function to handle the creation of the database and table
+// Main function to initialize everything
 const initializeDatabase = async () => {
     try {
-        await createDatabaseIfNotExists();
-
-        // After the database is created, connect to it
-        dbConnection = mysql.createConnection(dbConfig);
-        dbConnection.connect((err) => {
-            if (err) throw err;
-            console.log('Connected to lab5 database');
-            
-            // Create the patient table
-            createPatientTable();
-        });
-
+        await createDatabaseIfNotExists();   // Create the database if needed
+        await connectToDatabase();           // Connect to the database
+        await createPatientTable();          // Create the table if needed
     } catch (error) {
-        console.error("Error during database setup:", error);
+        console.error("Error initializing the database:", error);
     }
 };
 
 // Start the initialization process
+initializeDatabase();
+
 module.exports = {
     queryAsync
 };
