@@ -73,13 +73,16 @@ const handleInsert = (req, res) => {
     });
 
     req.on('end', async () => {
+        let insertQuery;
+        let insertionData;
+
         try {
             const jsonData = JSON.parse(data); 
             const patients = jsonData.data;
 
             // Insert query logic here
-            const insertQuery = 'INSERT INTO PATIENT (name, dateOfBirth) VALUES ?';
-            const insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
+            insertQuery = 'INSERT INTO PATIENT (name, dateOfBirth) VALUES ?';
+            insertionData = patients.map(patient => [patient.name, patient.dateOfBirth]);
 
             await queryAsync(insertQuery, [insertionData]);
 
