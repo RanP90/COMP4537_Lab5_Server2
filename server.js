@@ -61,6 +61,14 @@ const handlePostQuery = (req, res) => {
             const data = JSON.parse(body);
             const query = data.query.trim().toUpperCase();
 
+            // Restrict query types to SELECT and INSERT only
+            if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
+                console.error("Invalid query type");
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: "Only SELECT and INSERT queries are allowed." }));
+                return;
+            }
+
             if (!query.startsWith("SELECT") && !query.startsWith("INSERT")) {
                 console.error("Invalid query type");
                 res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -104,7 +112,7 @@ const requestHandler = (req, res) => {
     // CORS Headers
     //res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
