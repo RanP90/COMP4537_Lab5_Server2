@@ -90,4 +90,6 @@ const initializeDatabase = async () => {
 };
 
 // Start the initialization process
-initializeDatabase();
+module.exports = {
+    queryAsync
+};
