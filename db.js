@@ -95,7 +95,7 @@ const initializeDatabase = async () => {
         await connectToDatabase();           // Connect to the database
         await createPatientTable();          // Create the table if needed
     } catch (error) {
-        console.error("Error initializing the database:", error);
+        console.error("Error initializing the database:", error.message);  // Log the exact error message
     }
 };
 
